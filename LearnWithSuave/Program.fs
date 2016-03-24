@@ -1,5 +1,4 @@
 ﻿open System 
-
 open System.Net.Http
 
 open Suave
@@ -14,17 +13,26 @@ let toOK (x:HttpContext) s =
 
 let httpClient = new HttpClient()
 
-let echo = request (fun r -> 
-    match r.queryParam "msg" with
-    | Choice1Of2 toEcho -> OK toEcho
-    | Choice2Of2 msg -> BAD_REQUEST msg)
+let queryWebPart p f : WebPart = fun (x : HttpContext) -> 
+    async {
+            match x.request.queryParam p with
+            | Choice2Of2 msg -> return! BAD_REQUEST msg x
+            | Choice1Of2 v -> let! result = f v
+                              return! result |> toOK x
+    }
 
-let count: WebPart = fun (x : HttpContext) -> async {
-        match x.request.queryParam "url" with
-        | Choice2Of2 msg -> return! BAD_REQUEST msg x
-        | Choice1Of2 url -> let! page = httpClient.GetStringAsync(url) |> Async.AwaitTask
-                            return! page.Length |> toOK x
+let getPageAsync (url:string) = async {
+    return! httpClient.GetStringAsync(url) |> Async.AwaitTask
 }
+
+let getPageLengthAsync (url:string) = async {
+    let! content = getPageAsync url
+    return content.Length
+}
+
+let echo = queryWebPart "msg" (fun it -> async { return it })
+let proxy = queryWebPart "url" (getPageAsync |> memoizeAsync)
+let count = queryWebPart "url" (getPageLengthAsync |> memoizeAsync)
 
 let app =
   choose
@@ -33,6 +41,7 @@ let app =
             path "/healthcheck" >=> OK "OK"
             path "/echo" >=> echo
             path "/count" >=> count
+            path "/proxy" >=> proxy
         ]
     ]
 
