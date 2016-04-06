@@ -24,12 +24,14 @@ let trackExecTime (webPart: WebPart) =
         }
 
 let trace (webPart : WebPart) =
+    let log x =
+        log.DebugFormat("Request url: {0}, Response status: {1}", x.request.url, x.response.status.code)
+        x
+
     fun (ctx : HttpContext) ->
         async {
             let! res = webPart ctx
-            return res >>= fun x ->
-                           log.DebugFormat("Request url: {0}, Response status: {1}", x.request.url, x.response.status.code)
-                           x
+            return res >>= log
         }
 
 //let cache (webPart : WebPart) =
