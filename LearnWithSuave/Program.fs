@@ -48,5 +48,5 @@ let app =
 [<EntryPoint>]
 let main argv = 
     printfn "Starting web server..."
-    startWebServer defaultConfig app
+    startWebServer defaultConfig (commonInfrastructure app)
     0
