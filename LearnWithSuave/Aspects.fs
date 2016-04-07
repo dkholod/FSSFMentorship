@@ -8,24 +8,27 @@ open Common.Logging;
 
 open Suave
 
-let log = LogManager.GetLogger("mySuaveTestLogger");
+let logger = LogManager.GetLogger("mySuaveTestLogger");
 
-let trackExecTime (webPart: WebPart) =
+let trackExecTime (webPart: WebPart) =    
+    let watch = Stopwatch()
+    
+    let track x =
+        watch.Stop()
+        logger.DebugFormat("Operation duration: {0} (ms)", watch.ElapsedMilliseconds)
+        x
+    
     fun (ctx : HttpContext) ->
         async {
-            let watch = Stopwatch()
+            watch.Reset()
             watch.Start()
-            
             let! res = webPart ctx
-            return res >>= fun x ->
-                           watch.Stop()
-                           printfn "Operation duration: %d (ms)" watch.ElapsedMilliseconds
-                           x
+            return res >>= track
         }
 
 let trace (webPart : WebPart) =
     let log x =
-        log.DebugFormat("Request url: {0}, Response status: {1}", x.request.url, x.response.status.code)
+        logger.DebugFormat("Request url: {0}, Response status: {1}", x.request.url, x.response.status.code)
         x
 
     fun (ctx : HttpContext) ->
@@ -33,9 +36,6 @@ let trace (webPart : WebPart) =
             let! res = webPart ctx
             return res >>= log
         }
-
-//let cache (webPart : WebPart) =
-//    (fun (ctx : HttpContext) -> webPart ctx) |> memoize
 
 let commonInfrastructure =
     trace >> trackExecTime
