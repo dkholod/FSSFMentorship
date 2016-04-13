@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="SimpleTests.fs" />
+    <None Include="TreeGenerators.fsx" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -84,8 +85,6 @@
       <HintPath>..\packages\xunit.extensibility.execution.2.1.0\lib\net45\xunit.execution.desktop.dll</HintPath>
       <Private>True</Private>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\SimpleEditor\SimpleEditor.csproj">
       <Name>SimpleEditor</Name>
       <Project>{fdfd9a94-a467-46b5-bd42-79889b550329}</Project>
